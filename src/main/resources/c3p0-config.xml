@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<c3p0-config>
+	<named-config name="MyDataSource_h2">
+		<property name="driverClass">org.h2.Driver</property>
+
+		<property name="jdbcUrl">jdbc:h2:./YESsafe</property>
+
+		<property name="user">u_yessafe</property>
+
+		<property name="password">p_yessafe</property>
+
+		<property name="acquireIncrement">10</property>
+
+		<property name="initialPoolSize">10</property>
+
+		<property name="minPoolSize">10</property>
+
+		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
+			approach to configuring statement caching -->
+
+		<property name="maxStatements">0</property>
+
+		<property name="maxStatementsPerConnection">0</property>
+
+		<property name="breakAfterAcquireFailure">false</property>
+	</named-config>
+	<named-config name="MyDataSource_mysql">
+		<property name="driverClass">com.mysql.jdbc.Driver</property>
+
+		<property name="jdbcUrl">jdbc:mysql://172.16.10.30:3306/amdb?characterEncoding=utf8</property>
+
+		<property name="user">root</property>
+
+		<property name="password"></property>
+
+		<property name="acquireIncrement">10</property>
+
+		<property name="initialPoolSize">10</property>
+
+		<property name="minPoolSize">10</property>
+
+		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
+			approach to configuring statement caching -->
+
+		<property name="maxStatements">0</property>
+
+		<property name="maxStatementsPerConnection">0</property>
+
+		<property name="breakAfterAcquireFailure">false</property>
+	</named-config>
+
+	<named-config name="MyDataSource_sqlite">
+		<property name="driverClass">org.sqlite.JDBC</property>
+
+		<property name="jdbcUrl">jdbc:sqlite:YESsafe2.db</property>
+
+		<property name="user"></property>
+
+		<property name="password"></property>
+
+		<property name="acquireIncrement">10</property>
+
+		<property name="initialPoolSize">10</property>
+
+		<property name="minPoolSize">10</property>
+
+		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
+			approach to configuring statement caching -->
+
+		<property name="maxStatements">0</property>
+
+		<property name="maxStatementsPerConnection">0</property>
+
+		<property name="breakAfterAcquireFailure">false</property>
+
+		<property name="preferredTestQuery">SELECT 1</property>
+		<property name="idleConnectionTestPeriod">18000</property>
+		<property name="maxIdleTime">25000</property>
+		<property name="testConnectionOnCheckout">true</property>
+
+	</named-config>
+
+	<named-config name="MyDataSource_orcal">
+		<property name="driverClass">oracle.jdbc.driver.OracleDriver</property>
+
+		<property name="jdbcUrl">jdbc:oracle:thin:@localhost:1521:orcl</property>
+
+		<property name="user"></property>
+
+		<property name="password"></property>
+
+		<property name="acquireIncrement">10</property>
+
+		<property name="initialPoolSize">10</property>
+
+		<property name="minPoolSize">10</property>
+
+		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
+			approach to configuring statement caching -->
+
+		<property name="maxStatements">0</property>
+
+		<property name="maxStatementsPerConnection">0</property>
+
+		<property name="breakAfterAcquireFailure">false</property>
+	</named-config>
+	<named-config name="MyDataSource_sqlserver">
+		<property name="driverClass">com.microsoft.jdbc.sqlserver.SQLServerDriver</property>
+
+		<property name="jdbcUrl">jdbc:microsoft:sqlserver://localhost:1433;DatabaseName=mydb</property>
+		<property name="user"></property>
+		<property name="password"></property>
+
+		<property name="acquireIncrement">10</property>
+
+		<property name="initialPoolSize">10</property>
+
+		<property name="minPoolSize">10</property>
+
+		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
+			approach to configuring statement caching -->
+
+		<property name="maxStatements">0</property>
+
+		<property name="maxStatementsPerConnection">0</property>
+
+		<property name="breakAfterAcquireFailure">false</property>
+	</named-config>
+	<named-config name="MyDataSource_derby">
+		<property name="driverClass">org.apache.derby.jdbc.EmbeddedDriver</property>
+
+		<property name="jdbcUrl">jdbc:derby:./YESsafe;create=true</property>
+
+		<property name="user">u_yessafe</property>
+
+		<property name="password">p_yessafe</property>
+
+		<property name="acquireIncrement">10</property>
+
+		<property name="initialPoolSize">10</property>
+
+		<property name="minPoolSize">10</property>
+
+		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
+			approach to configuring statement caching -->
+
+		<property name="maxStatements">0</property>
+
+		<property name="maxStatementsPerConnection">0</property>
+
+		<property name="breakAfterAcquireFailure">false</property>
+	</named-config>
+
+</c3p0-config>  
