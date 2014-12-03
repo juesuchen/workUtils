@@ -2,9 +2,7 @@ package workUtils.email;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -12,25 +10,15 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.activation.DataHandler;
-import javax.activation.FileDataSource;
 import javax.mail.Authenticator;
-import javax.mail.BodyPart;
-import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimeUtility;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.mail.HtmlEmail;
 import org.apache.log4j.Logger;
 
 public class ISprintMailUtils {
@@ -39,55 +27,67 @@ public class ISprintMailUtils {
 
     private static final Map<String, String> templateCache = new HashMap<String, String>();
 
-    private static boolean isInNewThread = true;
-
     public void send(String user, String pass, String to, String subject, String body) throws Exception {
         sendBase(user, pass, to, null, subject, body);
     }
 
     public void sendBase(String user, String pass, String to, String cc, String subject, String body) throws Exception {
-
-        Properties props = getSmtpProperties();
-
-        final String username = user;
-        final String password = pass;
-
-        Session session = getSession(props, username, password);
-
-        Message msg = new MimeMessage(session);
-        msg.setFrom(new InternetAddress(username));
-        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to, false));
-        if (cc != null && cc.length() > 0) {
-            msg.setRecipients(Message.RecipientType.CC, InternetAddress.parse(cc, false));
-        }
-        msg.setSubject(subject);
-        msg.setText(body);
-        msg.setSentDate(new Date());
-        sendMsg(msg);
-
+        sendHTMLBase(to, cc, subject, body, null);
     }
 
-    private void sendMsg(final Message msg) throws MessagingException {
-        final long now = System.currentTimeMillis();
-        final String to = msg.getRecipients(Message.RecipientType.TO)[0].toString();
+    public void sendHTMLBase(String to, String cc, String subject, String body, byte[] imageData) throws Exception {
+        Properties props = getSmtpProperties();
+        final String username = SysInitService.getEmailUser();
+        final String password = SysInitService.getEmailPassword();
+        Session session = getSession(props, username, password);
 
-        if (isInNewThread) {
-            Executors.newCachedThreadPool().execute(new Runnable() {
-                public void run() {
-                    try {
-                        Transport.send(msg);
-                        logger.info("send to [" + to + "] successfull, cost seconds in "
-                                + (System.currentTimeMillis() - now) / 1000);
-                    } catch(MessagingException e) {
-                        logger.error("sendMsg error.", e);
-                    }
-                }
-            });
-        } else {
-            Transport.send(msg);
-            logger.info("send to [" + to + "] successfull, cost seconds in " + (System.currentTimeMillis() - now)
-                    / 1000);
+        HtmlEmail email = new HtmlEmail();
+        email.setMailSession(session);
+        email.setFrom(username);
+        email.addTo(to);
+        email.setSubject(subject);
+
+        if (cc != null && cc.length() > 0) {
+            email.addCc(cc);
         }
+
+        if (imageData != null) {
+            email.embed(new ByteArrayDataSource(imageData, "image/png"), "qr-code.png", "_IMG");
+        }
+
+        Pattern p = Pattern.compile("src=[\"|']((.+?)\\.(.+?))[\"|']");
+        Matcher m = p.matcher(body);
+        while (m.find()) {
+            String fileName = m.group(1);
+            String fileType = m.group(3);
+            File file = new File(SysInitService.getWebRoot() + "customImgs/" + fileName);
+            if (!file.exists()) {
+                logger.info("add customer images error:" + fileName);
+                break;
+            }
+            email.embed(new ByteArrayDataSource(FileUtils.readFileToByteArray(file), "image/" + fileType), fileName,
+                    fileName);
+            body = body.replaceFirst(fileName, "cid:" + fileName);
+        }
+
+        email.setHtmlMsg(body);
+        sendMsg(email);
+    }
+
+    private void sendMsg(final HtmlEmail email) throws MessagingException {
+        final long now = System.currentTimeMillis();
+        final String to = email.getToAddresses().toString();
+        Executors.newCachedThreadPool().execute(new Runnable() {
+            public void run() {
+                try {
+                    email.send();
+                    logger.info("send to [" + to + "] successfull, cost seconds in "
+                            + (System.currentTimeMillis() - now) / 1000);
+                } catch(Exception e) {
+                    logger.error("sendMsg error.", e);
+                }
+            }
+        });
     }
 
     public void send(String to, String subject, String body) throws Exception {
@@ -99,76 +99,11 @@ public class ISprintMailUtils {
     }
 
     public void sendHtmlWithImage(String to, String subject, String html, byte[] imageData) throws Exception {
-        Properties props = getSmtpProperties();
-        final String username = SysInitService.getEmailUser();
-        final String password = SysInitService.getEmailPassword();
-        Session session = getSession(props, username, password);
-        Message msg = new MimeMessage(session);
-        msg.setFrom(new InternetAddress(username));
-        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to, false));
-        msg.setSubject(subject);
-
-        Multipart mp = new MimeMultipart("related");
-
-        /** 解释并发送 html 里面有_IMG_ 的标记，并读取对应文件发送 begin **/
-        Pattern p = Pattern.compile("_IMG_\\d+");
-        Matcher m = p.matcher(html);
-        while (m.find()) {
-            String img = m.group();
-            File file = new File(SysInitService.getWebRoot() + "customImgs/" + img);
-            if (!file.exists()) {
-                logger.info("add customer images error:" + img);
-                break;
-            }
-            MimeBodyPart imgBody = new MimeBodyPart();
-            imgBody.setDataHandler(new DataHandler(new FileDataSource(file)));
-            imgBody.setContentID(img);
-            html = html.replaceFirst(img, "cid:" + img);
-            mp.addBodyPart(imgBody);
-        }
-        /** 解释并发送 html 里面有_IMG_ 的标记，并读取对应文件发送 end **/
-
-        MimeBodyPart imgBodyPart = new MimeBodyPart();
-        imgBodyPart.setDataHandler(new DataHandler(new ByteArrayDataSource(imageData, "application/octet-stream")));
-        imgBodyPart.setContentID("_IMG");// used in html ima tag
-        mp.addBodyPart(imgBodyPart);
-
-        MimeBodyPart textBodyPart = new MimeBodyPart();
-        textBodyPart.setContent(html, "text/html;charset=GBK");
-        mp.addBodyPart(textBodyPart);
-
-        msg.setContent(mp);
-        msg.saveChanges();
-
-        msg.setSentDate(new Date());
-        sendMsg(msg);
+        sendHTMLBase(to, null, subject, html, imageData);
     }
 
     public void send(String user, String pass, String to, String subject, String html, String affix) throws Exception {
-        Properties props = getSmtpProperties();
-        final String username = user;
-        final String password = pass;
-        Session session = getSession(props, username, password);
-        Message msg = new MimeMessage(session);
-        msg.setFrom(new InternetAddress(username));
-        msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to, false));
-        msg.setSubject(subject);
-        Multipart mp = new MimeMultipart();
-        msg.setContent(mp);
-        BodyPart bp = new MimeBodyPart();
-        bp.setContent("<meta http-equiv=Content-Type content=text/html; charset=UTF-8>" + html,
-                "text/html;charset=UTF-8");
-        mp.addBodyPart(bp);
-        if (affix != null && !"".equals(affix)) {
-            BodyPart bp1 = new MimeBodyPart();
-            FileDataSource fileds = new FileDataSource(affix);
-            bp1.setDataHandler(new DataHandler(fileds));
-            bp1.setFileName(fileds.getName());
-            mp.addBodyPart(bp1);
-            msg.setContent(mp);
-        }
-        msg.setSentDate(new Date());
-        sendMsg(msg);
+        sendHTMLBase(to, null, subject, html, null);
     }
 
     private Session getSession(Properties props, final String username, final String password) {
@@ -201,16 +136,6 @@ public class ISprintMailUtils {
         return properties;
     }
 
-    protected static String decodeText(String text) throws UnsupportedEncodingException {
-        if (text == null)
-            return null;
-        if (text.startsWith("=?GB") || text.startsWith("=?gb"))
-            text = MimeUtility.decodeText(text);
-        else
-            text = new String(text.getBytes("ISO8859_1"));
-        return text;
-    }
-
     /**
      * 
      * @Title: main
@@ -222,7 +147,7 @@ public class ISprintMailUtils {
      */
     public static void main(String[] args) {
         ISprintMailUtils mg = new ISprintMailUtils();
-        String to = "315944451@qq.com";
+        String to = "juesu.chen@axbsec.com";
         String subject = "Subject";
         String body = "This is a test mail ... :-)<img src=\"cid:_IMG\" width=\"200px\"/>xx<img src=\"_IMG_1\" width=\"200px\"/>yyzz<img src=\"_IMG_3\" width=\"200px\"/>";
         try {

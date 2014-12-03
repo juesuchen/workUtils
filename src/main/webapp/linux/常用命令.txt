@@ -1,0 +1,101 @@
+1、linux如何关闭防火墙
+1)重启后生效 
+开启： chkconfig iptables on 
+关闭： chkconfig iptables off   或者 /sbin/chkconfig --level 2345 iptables off
+
+2) 即时生效，重启后失效service 方式
+开启： service iptables start 
+关闭： service iptables stop
+
+方式查看防火墙状态：/etc/init.d/iptables status
+暂时关闭防火墙：/etc/init.d/iptables stop
+重启iptables:/etc/init.d/iptables restart
+
+
+2、查看服务列表状态
+chkconfig --list
+
+
+3、给文件增加权限
+chmod +x a.bin
+
+
+4、设置java环境
+1）/etc/profile
+export JAVA_HOME=/usr/share/jdk1.6.0_14 
+export PATH=$JAVA_HOME/bin:$PATH 
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+2)修改.bash_profile文件,只需要修改其个人用户主目录下的.bash_profile文件就可以了
+export JAVA_HOME=/usr/share/jdk1.6.0_14 
+export PATH=$JAVA_HOME/bin:$PATH 
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
+
+
+5、安装中文支持
+中文相关的软件包基本就是这些：
+ttfonts-zh_CN-2.12-1.noarch.rpm
+ttfonts-zh_TW-2.11-19.noarch.rpm
+kde-i18n-Chinese-3.1-2.noarch.rpm
+kde-i18n-Chinese-Big5-3.1-2.noarch.rpm
+miniChinput-0.0.3-37.i386.rpm
+xpdf-chinese-simplified-2.01-8.i386.rpm
+xpdf-chinese-traditional-2.01-8.i386.rpm
+openoffice-i18n-1.0.2-4.i386.rpm
+
+另外编辑/etc/sysconfig/i18n成下面这个样子：
+vi /etc/sysconfig/i18n
+LANG="zh_CN.GB18030"
+SUPPORTED="zh_CN.GB18030:zh_CN:zh:zh_TW.Big5:zh_TW:zh:en_US.iso885915:en_US:en"
+SYSFONT="lat0-sun16"
+SYSFONTACM="iso15"
+
+退出重新登陆就可以了。
+
+6、设置网络
+1)：使用命令修改（直接即时生效,重启失效）
+＃ifconfig eth0 192.168.0.1 netmask 255.255.255.0 up
+
+2)修改配置文档（需要重启网络配置,永远生效）
+手动改/etc/sysconfig/network-scripts/ifcfg-eth0文件
+DEVICE=eth0 #物理设备名
+IPADDR=192.168.1.10 #IP地址
+NETMASK=255.255.255.0 #掩码值
+NETWORK=192.168.1.0 #网络地址(可不要)
+BROADCAST=192.168.1.255 #广播地址（可不要）
+GATEWAY=192.168.1.1 #网关地址
+ONBOOT=yes # [yes|no]（引导时是否激活设备）
+USERCTL=no #[yes|no]（非root用户是否可以控制该设备）
+BOOTPROTO=static #[none|static|bootp|dhcp]（引导时不使用协议|静态分配|BOOTP协议|DHCP协议）
+例如我的动态获取IP：
+DEVICE="eth0"
+GATEWAY=172.16.20.254
+NETMASK=255.255.255.0
+BOOTPROTO="dhcp"
+HWADDR="08:00:27:83:B6:07"
+NM_CONTROLLED="yes"
+ONBOOT="yes"
+TYPE="Ethernet"
+UUID="71f5ab0c-dd2d-462b-bc57-d5a8f283a094"
+
+3)修改主机名
+vi /etc/sysconfig/network
+NETWORKING=yes
+HOSTNAME=localhost.localdomain
+
+4)修改DNS
+　　配置文件在/etc/resolv.conf下面。
+　　vi /etc/resolv.conf
+　　nameserver 202.109.14.5 #主DNS
+　　nameserver 219.141.136.10 #次DNS
+　　search localdomain
+
+5)重新启动网络配置
+方法有多种：
+1：root账户下 # service network restart
+2：# /etc/init.d/network restart
+3：# ifdown eth0
+# ifup eth0
+4：# ifconfig eth0 down
+# ifconfig eth0 up
+
+
