@@ -2,6 +2,9 @@ package workUtils.email;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +23,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.mail.HtmlEmail;
 import org.apache.log4j.Logger;
+
+import workUtils.utils.ReflectUtils;
 
 public class ISprintMailUtils {
 
@@ -48,26 +53,35 @@ public class ISprintMailUtils {
         email.setSubject(subject);
 
         if (cc != null && cc.length() > 0) {
-            email.addCc(cc);
+            String[] ccTos = cc.split(",");
+            for (String ccTo : ccTos) {
+                email.addCc(ccTo);
+            }
         }
 
         if (imageData != null) {
             email.embed(new ByteArrayDataSource(imageData, "image/png"), "qr-code.png", "_IMG");
         }
 
-        Pattern p = Pattern.compile("src=[\"|']((.+?)\\.(.+?))[\"|']");
+        Pattern p = Pattern.compile("src=[\"|'](.+?)[\"|']");
         Matcher m = p.matcher(body);
         while (m.find()) {
-            String fileName = m.group(1);
-            String fileType = m.group(3);
-            File file = new File(SysInitService.getWebRoot() + "customImgs/" + fileName);
-            if (!file.exists()) {
-                logger.info("add customer images error:" + fileName);
-                break;
+            String src = m.group(1);
+            if (src.startsWith("http")) {
+                try {
+                    String fileName = src.substring(src.lastIndexOf("/") + 1);
+                    String fileType = fileName.substring(fileName.lastIndexOf(".") + 1);
+                    URL url = new URL(src);
+                    URLConnection conn = url.openConnection();
+                    InputStream ins = conn.getInputStream();
+                    byte[] data = ReflectUtils.steamToBytes(ins);
+                    String cid = email.embed(new ByteArrayDataSource(data, "image/" + fileType), fileName);
+                    body = body.replaceFirst(src, "cid:" + cid);
+                } catch(Exception e) {
+                    logger.info("add customer images error:" + src);
+                    continue;
+                }
             }
-            email.embed(new ByteArrayDataSource(FileUtils.readFileToByteArray(file), "image/" + fileType), fileName,
-                    fileName);
-            body = body.replaceFirst(fileName, "cid:" + fileName);
         }
 
         email.setHtmlMsg(body);

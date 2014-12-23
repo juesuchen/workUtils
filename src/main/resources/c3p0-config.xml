@@ -81,14 +81,14 @@
 
 	</named-config>
 
-	<named-config name="MyDataSource_orcal">
-		<property name="driverClass">oracle.jdbc.driver.OracleDriver</property>
+	<named-config name="MyDataSource_oracle">
+		<property name="driverClass">oracle.jdbc.OracleDriver</property>
 
-		<property name="jdbcUrl">jdbc:oracle:thin:@localhost:1521:orcl</property>
+		<property name="jdbcUrl">jdbc:oracle:thin:@172.16.10.55:1521:orcl</property>
 
-		<property name="user"></property>
+		<property name="user">juesu</property>
 
-		<property name="password"></property>
+		<property name="password">password</property>
 
 		<property name="acquireIncrement">10</property>
 
@@ -96,9 +96,8 @@
 
 		<property name="minPoolSize">10</property>
 
-		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
-			approach to configuring statement caching -->
-
+		<property name="maxPoolSize">200</property>
+		
 		<property name="maxStatements">0</property>
 
 		<property name="maxStatementsPerConnection">0</property>
@@ -106,11 +105,10 @@
 		<property name="breakAfterAcquireFailure">false</property>
 	</named-config>
 	<named-config name="MyDataSource_sqlserver">
-		<property name="driverClass">com.microsoft.jdbc.sqlserver.SQLServerDriver</property>
-
-		<property name="jdbcUrl">jdbc:microsoft:sqlserver://localhost:1433;DatabaseName=mydb</property>
-		<property name="user"></property>
-		<property name="password"></property>
+		<property name="driverClass">com.microsoft.sqlserver.jdbc.SQLServerDriver</property>
+		<property name="jdbcUrl">jdbc:sqlserver://172.16.50.28:1433;databaseName=token</property>
+		<property name="user">sa</property>
+		<property name="password">i-Sprint2011</property>
 
 		<property name="acquireIncrement">10</property>
 
@@ -142,8 +140,7 @@
 
 		<property name="minPoolSize">10</property>
 
-		<property name="maxPoolSize">200</property><!-- intergalactoApp adopts a different 
-			approach to configuring statement caching -->
+		<property name="maxPoolSize">200</property>
 
 		<property name="maxStatements">0</property>
 

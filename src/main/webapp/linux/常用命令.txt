@@ -22,7 +22,7 @@ chmod +x a.bin
 
 4、设置java环境
 1）/etc/profile
-export JAVA_HOME=/usr/share/jdk1.6.0_14 
+export JAVA_HOME=/usr/token/jdk1.6.0_41
 export PATH=$JAVA_HOME/bin:$PATH 
 export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar 
 2)修改.bash_profile文件,只需要修改其个人用户主目录下的.bash_profile文件就可以了
@@ -42,6 +42,8 @@ xpdf-chinese-simplified-2.01-8.i386.rpm
 xpdf-chinese-traditional-2.01-8.i386.rpm
 openoffice-i18n-1.0.2-4.i386.rpm
 
+rpm -ivh package.rpm 安装一个rpm包 
+
 另外编辑/etc/sysconfig/i18n成下面这个样子：
 vi /etc/sysconfig/i18n
 LANG="zh_CN.GB18030"
@@ -50,6 +52,8 @@ SYSFONT="lat0-sun16"
 SYSFONTACM="iso15"
 
 退出重新登陆就可以了。
+
+我的6.4的是装了kde-i18n-Chinese和 LANG="zh_CN.UTF-8"
 
 6、设置网络
 1)：使用命令修改（直接即时生效,重启失效）
@@ -97,5 +101,60 @@ HOSTNAME=localhost.localdomain
 # ifup eth0
 4：# ifconfig eth0 down
 # ifconfig eth0 up
+
+
+7、解压压缩
+压缩
+tar –cvf jpg.tar *.jpg  将目录里所有jpg文件打包成tar.jpg
+tar –czf jpg.tar.gz *.jpg   将目录里所有jpg文件打包成jpg.tar后，并且将其用gzip压缩，生成一个gzip压缩过的包，命名为jpg.tar.gz
+tar –cjf jpg.tar.bz2 *.jpg 将目录里所有jpg文件打包成jpg.tar后，并且将其用bzip2压缩，生成一个bzip2压缩过的包，命名为jpg.tar.bz2
+tar –cZf jpg.tar.Z *.jpg   将目录里所有jpg文件打包成jpg.tar后，并且将其用compress压缩，生成一个umcompress压缩过的包，命名为jpg.tar.Z
+rar a jpg.rar *.jpg rar格式的压缩，需要先下载rar for linux
+zip jpg.zip *.jpg   zip格式的压缩，需要先下载zip for linux 
+解压
+tar –xvf file.tar  解压 tar包
+tar -xzvf file.tar.gz 解压tar.gz
+tar -xjvf file.tar.bz2   解压 tar.bz2
+tar –xZvf file.tar.Z   解压tar.Z
+unrar e file.rar 解压rar
+unzip file.zip 解压zip
+
+8.在很长文档中，quit 退出
+
+9、安装图形界面
+1) 挂载光盘
+    mount /dev/cdrom /media/cdrom     (需要提前在media下去创建一个目录cdrom)
+2) 创建自己的repo文件
+    vim /etc/yum.repos.d/local.repo
+    [local]
+    name=local
+    baseurl=file:///media/cdrom
+    enabled=1
+    gpgcheck=0
+3)修改yumRepo.py文件(我没做这步)
+    vim /usr/lib/python2.6/site-packages/yum/yumRepo.py
+    把781行的
+    remote=url + '/' +relative
+    改成
+    remote=url + '/local_yum_source' + relative
+4) 使用本地的YUM进行安装软件
+5)安装X window
+    yum groupinstall "X Window System"
+    yum groupinstall Desktop
+    yum groupinstall "Desktop Platform"
+6) 修改/etc/inittab文件
+    id:5:initdefault:
+reboot后就会自动进入x window
+
+
+
+10、查看进程和删除进程
+ps aux
+kill -9 [PID]
+
+
+11、删除一个文件：rm -f a.txt
+文件夹：rm -rf YESsafeTokenServer/
+
 
 
